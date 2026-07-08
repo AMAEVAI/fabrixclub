@@ -94,6 +94,11 @@ export async function addSubscription(email: string, status: string = "active") 
 export async function checkSubscription(email: string): Promise<boolean> {
   const normalizedEmail = email.trim().toLowerCase();
   
+  // Администратор всегда имеет доступ!
+  if (normalizedEmail === "amaev.pro@gmail.com") {
+    return true;
+  }
+  
   if (hasRealSupabase && supabase) {
     const { data, error } = await supabase
       .from("subscriptions")
@@ -110,6 +115,35 @@ export async function checkSubscription(email: string): Promise<boolean> {
     const db = readLocalDb();
     const sub = db.subscriptions.find(s => s.email === normalizedEmail);
     return sub?.status === "active";
+  }
+}
+
+export async function getSubscriptions() {
+  if (hasRealSupabase && supabase) {
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .order("paid_at", { ascending: false });
+    if (error) throw error;
+    return data || [];
+  } else {
+    const db = readLocalDb();
+    return db.subscriptions || [];
+  }
+}
+
+export async function deleteSubscription(email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (hasRealSupabase && supabase) {
+    const { error } = await supabase
+      .from("subscriptions")
+      .delete()
+      .eq("email", normalizedEmail);
+    if (error) throw error;
+  } else {
+    const db = readLocalDb();
+    db.subscriptions = db.subscriptions.filter(s => s.email !== normalizedEmail);
+    writeLocalDb(db);
   }
 }
 

@@ -102,7 +102,15 @@ export default function CatalogDashboard({ factories, email }: CatalogDashboardP
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {email === "amaev.pro@gmail.com" && (
+              <button
+                onClick={() => router.push(`/admin?email=${encodeURIComponent(email)}`)}
+                className="text-xs bg-blue-600/15 hover:bg-blue-600/25 text-blue-400 border border-blue-500/30 px-3.5 py-1.5 rounded-xl font-bold transition-all"
+              >
+                Админка
+              </button>
+            )}
             <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full font-semibold max-w-[200px] truncate hidden md:inline">
               Premium • {email}
             </span>

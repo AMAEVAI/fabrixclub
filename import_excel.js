@@ -28,7 +28,6 @@ function getCountryInfo(rawCountry) {
   if (COUNTRY_MAP[clean]) {
     return COUNTRY_MAP[clean];
   }
-  // Поиск по подстроке
   for (const [key, val] of Object.entries(COUNTRY_MAP)) {
     if (clean.includes(key)) {
       return val;
@@ -65,7 +64,7 @@ function extractPhone(contactStr) {
   return phones ? phones[0] : 'N/A';
 }
 
-function main() {
+async function main() {
   if (!fs.existsSync(EXCEL_PATH)) {
     console.error(`❌ Ошибка: Файл ${EXCEL_PATH} не найден.`);
     return;
@@ -77,14 +76,12 @@ function main() {
   let factories = [];
   let globalId = 1;
 
-  // 1. Парсинг первого листа "333"
   if (workbook.SheetNames.includes('333')) {
     console.log("Парсинг листа '333'...");
     const sheet333 = workbook.Sheets['333'];
     const rows = XLSX.utils.sheet_to_json(sheet333);
     
-    rows.forEach((row, i) => {
-      // Ищем колонки независимо от пробелов в заголовках
+    rows.forEach((row) => {
       const name = row['Название фабрики '] || row['Название фабрики'] || row['Name'];
       if (!name) return;
 
@@ -106,14 +103,13 @@ function main() {
         site = 'https://' + site;
       }
 
-      // Рейтинг: если это опыт работы (лет), масштабируем в шкалу 4.0 - 5.0
       let rating = 4.5;
       const rawExp = row['Опыт работы'] || row['Рейтинг'];
       if (rawExp) {
         const exp = parseFloat(rawExp);
         if (!isNaN(exp)) {
           if (exp > 5) {
-            rating = 4.5 + ((exp % 5) / 10); // например, 37 лет -> 4.7
+            rating = 4.5 + ((exp % 5) / 10);
             if (rating > 5.0) rating = 4.9;
           } else {
             rating = exp;
@@ -139,13 +135,12 @@ function main() {
     });
   }
 
-  // 2. Парсинг второго листа "444"
   if (workbook.SheetNames.includes('444')) {
     console.log("Парсинг листа '444'...");
     const sheet444 = workbook.Sheets['444'];
     const rows = XLSX.utils.sheet_to_json(sheet444);
     
-    rows.forEach((row, i) => {
+    rows.forEach((row) => {
       const name = row['Fournisseur'] || row['Name'];
       if (!name) return;
 
@@ -185,11 +180,9 @@ function main() {
     });
   }
 
-  // Сохраняем локально
   fs.writeFileSync(LOCAL_FACTORIES_PATH, JSON.stringify(factories, null, 2), 'utf-8');
   console.log(`\n✅ Успешно импортировано ${factories.length} фабрик в ${LOCAL_FACTORIES_PATH}!`);
 
-  // Пробуем загрузить в Supabase, если ключи настроены в .env.local
   const envPath = '.env.local';
   let supabaseUrl = '';
   let supabaseKey = '';
@@ -198,10 +191,10 @@ function main() {
     const envContent = fs.readFileSync(envPath, 'utf-8');
     const lines = envContent.split('\n');
     lines.forEach(l => {
-      if (l.startsWith('NEXT_PUBLIC_SUPABASE_URL=')) {
+      if (l.trim().startsWith('NEXT_PUBLIC_SUPABASE_URL=')) {
         supabaseUrl = l.split('=')[1].trim();
       }
-      if (l.startsWith('NEXT_PUBLIC_SUPABASE_ANON_KEY=')) {
+      if (l.trim().startsWith('NEXT_PUBLIC_SUPABASE_ANON_KEY=')) {
         supabaseKey = l.split('=')[1].trim();
       }
     });
@@ -212,40 +205,41 @@ function main() {
     try {
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      // Сначала очистим таблицу
       console.log("Очищаем таблицу 'factories' в Supabase...");
       
-      // Загружаем пачками по 100 строк
-      (async () => {
-        // Мы можем использовать API Supabase
-        const spRows = factories.map(f => ({
-          name: f.name,
-          country: f.country,
-          flag: f.flag,
-          category: f.category,
-          brands: f.brands,
-          niche: f.niche,
-          moq: f.MOQ,
-          moq_category: f.moqCategory,
-          contact_email: f.contact,
-          phone: f.phone,
-          website: f.site,
-          rating: f.rating
-        }));
+      const spRows = factories.map(f => ({
+        name: f.name,
+        country: f.country,
+        flag: f.flag,
+        category: f.category,
+        brands: f.brands,
+        niche: f.niche,
+        moq: f.MOQ,
+        moq_category: f.moqCategory,
+        contact_email: f.contact,
+        phone: f.phone,
+        website: f.site,
+        rating: f.rating
+      }));
 
-        // Удалим все предыдущие записи
-        await supabase.from('factories').delete().neq('name', '');
+      // Удалим все предыдущие записи
+      const deleteRes = await supabase.from('factories').delete().neq('name', '');
+      if (deleteRes.error) {
+        throw new Error(`Ошибка удаления записей: ${deleteRes.error.message} (${deleteRes.error.details || ''})`);
+      }
 
-        // Запишем новые
-        for (let i = 0; i < spRows.length; i += 100) {
-          const chunk = spRows.slice(i, i + 100);
-          const { error } = await supabase.from('factories').insert(chunk);
-          if (error) throw error;
+      // Запишем новые
+      for (let i = 0; i < spRows.length; i += 100) {
+        const chunk = spRows.slice(i, i + 100);
+        const { error } = await supabase.from('factories').insert(chunk);
+        if (error) {
+          throw new Error(`Ошибка вставки пакета ${i}: ${error.message} (${error.details || ''})`);
         }
-        console.log("🚀 Данные успешно выгружены в облако Supabase!");
-      })();
+      }
+      console.log("🚀 Данные успешно выгружены в облако Supabase!");
     } catch (e) {
-      console.error("⚠️ Не удалось загрузить в Supabase:", e.message);
+      console.error("❌ Ошибка при работе с Supabase:", e.message);
+      console.log("Подсказка: проверьте, что в Supabase создана таблица 'factories' и отключена RLS (или настроена политика на вставку для Anon-пользователей).");
     }
   } else {
     console.log("ℹ️ Облачный Supabase не подключен (используется локальная БД). Все готово для локального запуска!");
