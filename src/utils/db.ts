@@ -27,14 +27,24 @@ export const MOCK_FACTORIES = [
   { id: 6, name: "Moda Italia", country: "Италия", flag: "🇮🇹", category: "Обувь", brands: "Gucci, Prada (Subcontractor)", niche: "Premium Leather Shoes", MOQ: "50-100", moqCategory: "low", contact: "info@modaitalia.it", phone: "+39 02 777 888", site: "https://modaitalia.it", rating: 4.8 }
 ];
 
+// In-memory fallback для сред с защитой от записи (например, Vercel)
+const memoryDb: { subscriptions: any[] } = { subscriptions: [] };
+
 // Чтение локальной БД подписок
 function readLocalDb(): { subscriptions: any[] } {
+  if (memoryDb.subscriptions.length > 0) {
+    return memoryDb;
+  }
   if (!fs.existsSync(LOCAL_DB_PATH)) {
     return { subscriptions: [] };
   }
   try {
     const data = fs.readFileSync(LOCAL_DB_PATH, "utf-8");
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    if (parsed && Array.isArray(parsed.subscriptions)) {
+      memoryDb.subscriptions = parsed.subscriptions;
+    }
+    return parsed;
   } catch {
     return { subscriptions: [] };
   }
@@ -42,7 +52,12 @@ function readLocalDb(): { subscriptions: any[] } {
 
 // Запись в локальную БД подписок
 function writeLocalDb(data: { subscriptions: any[] }) {
-  fs.writeFileSync(LOCAL_DB_PATH, JSON.stringify(data, null, 2), "utf-8");
+  memoryDb.subscriptions = data.subscriptions;
+  try {
+    fs.writeFileSync(LOCAL_DB_PATH, JSON.stringify(data, null, 2), "utf-8");
+  } catch (e) {
+    console.warn("Could not write local_db.json (running on read-only filesystem), falling back to in-memory store.");
+  }
 }
 
 export async function addSubscription(email: string, status: string = "active") {
