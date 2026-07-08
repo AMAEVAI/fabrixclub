@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# B2B Factory Hub — Полноценный Full-Stack Проект (Next.js + Supabase)
 
-## Getting Started
+Добро пожаловать в проект B2B Factory Hub! Мы перенесли интерактивный прототип MVP в полноценное веб-приложение на базе современного веб-стека.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🛠️ Стек технологий
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* **Фронтенд & Бэкенд (API)**: Next.js (App Router, TypeScript, Tailwind CSS v4).
+* **База данных & Авторизация**: Supabase (PostgreSQL, Supabase Auth).
+* **Иконки**: Lucide React.
+* **Автоматизация**: Скрипты на Python для локального импорта данных и запуска.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📂 Структура проекта
 
-## Learn More
+* **`src/app/page.tsx`** — Главная страница (Лендинг, форма оплаты Stripe и симуляция Make.com Webhook).
+* **`src/app/login/page.tsx`** — Страница авторизации клиентов по email.
+* **`src/app/catalog/page.tsx`** — Защищенная серверная страница каталога с проверкой активного доступа.
+* **`src/app/catalog/CatalogDashboard.tsx`** — Клиентский компонент каталога с интерактивными фильтрами, поиском, переключением видов (ПК/Смартфон) и защитой от копирования.
+* **`src/app/api/webhook/route.ts`** — API-маршрут (Webhook) для добавления пользователей после оплаты.
+* **`src/app/api/check-subscription/route.ts`** — API-маршрут для валидации статуса подписки.
+* **`src/utils/db.ts`** — Гибридный менеджер базы данных. Автоматически переключается на **локальный JSON-файл**, если ключи Supabase не настроены, что позволяет тестировать проект из коробки без регистрации в облаке!
+* **`import_csv_to_supabase.py`** — Python-парсер таблиц CSV (`333.csv`) для импорта фабрик.
+* **`start.py`** — Скрипт для автоустановки зависимостей и запуска проекта одной командой.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Быстрый запуск (Локальный тест)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Мы настроили проект так, чтобы он работал **без первоначальной настройки Supabase** за счет локального файлового хранилища (`local_db.json` и `local_factories.json`):
 
-## Deploy on Vercel
+1. Перейдите в папку проекта:
+   ```bash
+   cd /Users/blackborz/.gemini/antigravity/scratch/b2b-factory-hub
+   ```
+2. Запустите скрипт автоматического запуска:
+   ```bash
+   python3 start.py
+   ```
+   *Скрипт сам выполнит `npm install` (если папка `node_modules` отсутствует), запустит локальный сервер Next.js на порту `3000` и откроет страницу **`http://localhost:3000`** в вашем браузере.*
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Проверьте сценарий оплаты:**
+   * Введите любой email на главной странице, нажмите «Купить доступ».
+   * Нажмите «Симулировать Оплату».
+   * После симуляции робот Make.com запишет ваш email в локальную БД подписок.
+   * Нажмите «Перейти в каталог фабрик» — вы получите доступ к базе данных фабрик!
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 📊 Импорт ваших CSV-данных
+
+Чтобы импортировать вашу собственную таблицу фабрик:
+
+1. Поместите ваш файл с расширением `.csv` (например, `333.xlsx - 333.csv`) в корень папки `b2b-factory-hub`.
+2. Запустите импортер:
+   ```bash
+   python3 import_csv_to_supabase.py
+   ```
+   *Скрипт автоматически распознает столбцы (Название, Страна, MOQ, Категория, Контакты, Сайт) и сохранит их в файл `local_factories.json`. Ваш локальный кабинет сразу отобразит эти данные.*
+
+---
+
+## 🔗 Подключение облачного Supabase (Production)
+
+Когда вы создадите проект на Supabase:
+
+1. Откройте файл **`.env.local`** в корне проекта.
+2. Замените плейсхолдеры реальными значениями:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://your-real-project-id.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   ```
+3. Запустите скрипт `python3 import_csv_to_supabase.py` — он обнаружит реальные ключи и автоматически загрузит вашу таблицу фабрик в облачную таблицу `factories` PostgreSQL!
