@@ -14,14 +14,42 @@ export default function Home() {
   const [step, setStep] = useState(1); // 1: Landing, 2: Checkout, 3: Processing, 4: Success
   const [error, setError] = useState("");
 
-  const handleStartPayment = (e: React.FormEvent) => {
+  const handleStartPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !email.includes("@")) {
       setError("Пожалуйста, введите корректный e-mail!");
       return;
     }
     setError("");
-    setStep(2);
+    setIsSubmitting(true);
+
+    try {
+      // Пытаемся создать настоящую сессию Stripe
+      const response = await fetch("/api/checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        // Перенаправляем на настоящий Stripe Checkout
+        window.location.href = data.url;
+        return;
+      }
+
+      // Если Stripe не настроен или выдал ошибку, переходим на симулятор
+      setStep(2);
+    } catch (err) {
+      setStep(2);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSimulatePayment = async (e: React.FormEvent) => {
