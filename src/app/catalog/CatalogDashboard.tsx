@@ -288,7 +288,7 @@ export default function CatalogDashboard({ factories, email }: CatalogDashboardP
                             {/* Rating badge */}
                             <span className="flex items-center gap-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded-lg text-xs font-bold">
                               <Star className="w-3.5 h-3.5 fill-amber-400 shrink-0" />
-                              {factory.rating.toFixed(1)}
+                              {(typeof factory.rating === 'number' ? factory.rating : 4.5).toFixed(1)}
                             </span>
                           </div>
 
@@ -323,24 +323,30 @@ export default function CatalogDashboard({ factories, email }: CatalogDashboardP
                           {/* Contact Details (Expandable) */}
                           {expandedContacts[factory.id] && (
                             <div className="bg-slate-950 p-4 rounded-xl border border-slate-900/80 text-xs space-y-2.5 animate-fadeIn">
-                              <div className="flex items-center gap-2 text-slate-300">
-                                <Mail className="w-4 h-4 text-blue-400 shrink-0" />
-                                <a href={`mailto:${factory.contact}`} className="hover:underline hover:text-white truncate">
-                                  {factory.contact}
-                                </a>
-                              </div>
-                              <div className="flex items-center gap-2 text-slate-300">
-                                <Phone className="w-4 h-4 text-blue-400 shrink-0" />
-                                <a href={`tel:${factory.phone}`} className="hover:underline hover:text-white">
-                                  {factory.phone}
-                                </a>
-                              </div>
-                              <div className="flex items-center gap-2 text-slate-300">
-                                <LinkIcon className="w-4 h-4 text-blue-400 shrink-0" />
-                                <a href={factory.site} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-white truncate flex items-center gap-1 text-blue-400">
-                                  {factory.site.replace("https://", "")}
-                                </a>
-                              </div>
+                              {factory.contact && factory.contact !== 'N/A' && (
+                                <div className="flex items-center gap-2 text-slate-300">
+                                  <Mail className="w-4 h-4 text-blue-400 shrink-0" />
+                                  <a href={`mailto:${factory.contact}`} className="hover:underline hover:text-white truncate">
+                                    {factory.contact}
+                                  </a>
+                                </div>
+                              )}
+                              {factory.phone && factory.phone !== 'N/A' && (
+                                <div className="flex items-center gap-2 text-slate-300">
+                                  <Phone className="w-4 h-4 text-blue-400 shrink-0" />
+                                  <a href={`tel:${factory.phone}`} className="hover:underline hover:text-white">
+                                    {factory.phone}
+                                  </a>
+                                </div>
+                              )}
+                              {factory.site && factory.site !== 'N/A' && (
+                                <div className="flex items-center gap-2 text-slate-300">
+                                  <LinkIcon className="w-4 h-4 text-blue-400 shrink-0" />
+                                  <a href={factory.site} target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-white truncate flex items-center gap-1 text-blue-400">
+                                    {factory.site.replace("https://", "").replace("http://", "")}
+                                  </a>
+                                </div>
+                              )}
                             </div>
                           )}
 

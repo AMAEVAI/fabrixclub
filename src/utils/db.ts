@@ -154,7 +154,22 @@ export async function getFactories() {
       .select("*")
       .order("name", { ascending: true });
     if (error) throw error;
-    return data;
+    
+    return (data || []).map((f: any) => ({
+      id: f.id,
+      name: f.name || "N/A",
+      country: f.country || "N/A",
+      flag: f.flag || "🌐",
+      category: f.category || "N/A",
+      brands: f.brands || "N/A",
+      niche: f.niche || "N/A",
+      MOQ: f.moq || "100",
+      moqCategory: f.moq_category || "medium",
+      contact: f.contact_email || "N/A",
+      phone: f.phone || "N/A",
+      site: f.website || "N/A",
+      rating: typeof f.rating === 'number' ? f.rating : 4.5
+    }));
   } else {
     // Если есть локально импортированный файл фабрик, читаем его
     if (fs.existsSync(LOCAL_FACTORIES_PATH)) {
