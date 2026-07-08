@@ -64,12 +64,12 @@ export default function Home() {
       {/* Header */}
       <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-blue-600 text-white p-2 rounded-lg font-extrabold tracking-wider text-sm">
-              B2B
+          <div className="flex items-center gap-1.5">
+            <div className="bg-blue-600 text-white px-2 py-1 rounded-lg font-extrabold tracking-wider text-xs">
+              FABRIX
             </div>
             <span className="font-bold text-lg tracking-tight text-white">
-              Factory Hub
+              club
             </span>
           </div>
           <button 
@@ -303,7 +303,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950 py-8 text-center text-slate-600 text-xs">
-        <p>© 2026 B2B Factory Hub. Все права защищены. MVP интерактивного прототипа.</p>
+        <p>© 2026 Fabrixclub. Все права защищены. MVP интерактивного прототипа.</p>
       </footer>
     </div>
   );

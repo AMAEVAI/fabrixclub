@@ -80,9 +80,9 @@ export default function CatalogDashboard({ factories, email }: CatalogDashboardP
       <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="bg-blue-600 text-white p-2 rounded-lg font-extrabold tracking-wider text-sm">B2B</div>
-              <span className="font-bold text-lg tracking-tight text-white hidden sm:inline">Factory Hub</span>
+            <div className="flex items-center gap-1.5">
+              <div className="bg-blue-600 text-white px-2.5 py-1 rounded-lg font-extrabold tracking-wider text-xs">FABRIX</div>
+              <span className="font-bold text-lg tracking-tight text-white hidden sm:inline">club</span>
             </div>
             
             {/* View Mode Switcher */}

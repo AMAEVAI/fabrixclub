@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "B2B Factory Hub — База данных фабрик",
+  title: "Fabrixclub — База данных фабрик",
   description: "Закрытый каталог проверенных фабрик",
 };
 
